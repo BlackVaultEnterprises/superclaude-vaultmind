@@ -1,7 +1,12 @@
 #!/bin/bash
 
-# Set OpenRouter API key
-export OPENROUTER_API_KEY="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"
+# Set OpenRouter API key from environment
+# export OPENROUTER_API_KEY="your-api-key-here"
+if [ -z "$OPENROUTER_API_KEY" ]; then
+    echo "❌ Error: OPENROUTER_API_KEY environment variable not set!"
+    echo "Please set your API key: export OPENROUTER_API_KEY='your-key'"
+    exit 1
+fi
 
 # Check if binary exists
 if [ ! -f "./superclaude" ]; then
