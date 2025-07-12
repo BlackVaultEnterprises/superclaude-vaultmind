@@ -1,0 +1,36 @@
+diff --git a/internal/tui/page/chat.go b/internal/tui/page/chat.go
+index 1234567..8901234 100644
+--- a/internal/tui/page/chat.go
++++ b/internal/tui/page/chat.go
+@@ -10,6 +10,7 @@ import (
+ 	"github.com/opencode-ai/opencode/internal/app"
+ 	"github.com/opencode-ai/opencode/internal/completions"
+ 	"github.com/opencode-ai/opencode/internal/message"
++	"github.com/opencode-ai/opencode/internal/superclaude"
+ 	"github.com/opencode-ai/opencode/internal/session"
+ 	"github.com/opencode-ai/opencode/internal/tui/components/chat"
+ 	"github.com/opencode-ai/opencode/internal/tui/components/dialog"
+@@ -153,6 +154,21 @@ func (p *chatPage) clearSidebar() tea.Cmd {
+ }
+ 
+ func (p *chatPage) sendMessage(text string, attachments []message.Attachment) tea.Cmd {
++	// Check if it's a SuperClaude command
++	superHandler := superclaude.NewSuperClaudeHandler(p.app.CoderAgent)
++	handled, err := superHandler.HandleCommand(context.Background(), p.session.ID, text)
++	if err != nil {
++		return util.ReportError(err)
++	}
++	
++	// If it was handled as a SuperClaude command, return early
++	if handled {
++		// The SuperClaude handler already initiated the agent run
++		// Just ensure we have a session if needed
++		if p.session.ID == "" {
++			return p.createSessionAndSend(text, attachments)
++		}
++		return nil
++	}
++	
+ 	var cmds []tea.Cmd
+ 	if p.session.ID == "" {
+ 		session, err := p.app.Sessions.Create(context.Background(), "New Session")

@@ -1,0 +1,347 @@
+# SuperClaude Configuration File
+# Complete configuration for all environments
+
+# Server Configuration
+server:
+  host: "0.0.0.0"
+  port: 8080
+  timeout: 30s
+  max_connections: 1000
+  tls:
+    enabled: false
+    cert_file: ""
+    key_file: ""
+  
+# MCP Server Configuration  
+mcp:
+  enabled: true
+  host: "0.0.0.0"
+  port: 9090
+  websocket:
+    read_buffer_size: 1024
+    write_buffer_size: 1024
+    check_origin: false # Set to true in production
+  cors:
+    allowed_origins: ["*"] # Restrict in production
+    allowed_methods: ["GET", "POST", "OPTIONS"]
+    allowed_headers: ["*"]
+
+# AI Provider Configuration
+providers:
+  default: "openrouter"
+  
+  openrouter:
+    api_key: "${OPENROUTER_API_KEY}"
+    base_url: "https://openrouter.ai/api/v1"
+    default_model: "mistralai/mixtral-8x7b-instruct"
+    timeout: 60s
+    retry_count: 3
+    retry_delay: 1s
+    models:
+      - "mistralai/mixtral-8x7b-instruct"
+      - "openai/gpt-4-turbo-preview"
+      - "anthropic/claude-3-opus"
+      - "meta-llama/llama-3.1-70b-instruct"
+  
+  openai:
+    api_key: "${OPENAI_API_KEY}"
+    base_url: "https://api.openai.com/v1"
+    default_model: "gpt-4-turbo-preview"
+    timeout: 60s
+    retry_count: 3
+    retry_delay: 1s
+    models:
+      - "gpt-4-turbo-preview"
+      - "gpt-4"
+      - "gpt-3.5-turbo"
+  
+  anthropic:
+    api_key: "${ANTHROPIC_API_KEY}"
+    base_url: "https://api.anthropic.com/v1"
+    default_model: "claude-3-opus-20240229"
+    timeout: 60s
+    retry_count: 3
+    retry_delay: 1s
+    models:
+      - "claude-3-opus-20240229"
+      - "claude-3-sonnet-20240229"
+      - "claude-3-haiku-20240307"
+  
+  ollama:
+    base_url: "http://localhost:11434"
+    default_model: "deepseek-coder:6.7b"
+    timeout: 120s
+    models:
+      - "deepseek-coder:6.7b"
+      - "codellama:13b"
+      - "mistral:7b"
+
+# Database Configuration
+database:
+  type: "sqlite" # sqlite, postgres, mysql
+  sqlite:
+    path: "~/.superclaude/superclaude.db"
+    max_connections: 10
+    busy_timeout: 5s
+    journal_mode: "WAL"
+    synchronous: "NORMAL"
+  postgres:
+    host: "${DB_HOST:localhost}"
+    port: ${DB_PORT:5432}
+    database: "${DB_NAME:superclaude}"
+    username: "${DB_USER:superclaude}"
+    password: "${DB_PASSWORD}"
+    ssl_mode: "require"
+    max_connections: 25
+    max_idle_connections: 5
+    connection_max_lifetime: 5m
+  mysql:
+    host: "${DB_HOST:localhost}"
+    port: ${DB_PORT:3306}
+    database: "${DB_NAME:superclaude}"
+    username: "${DB_USER:superclaude}"
+    password: "${DB_PASSWORD}"
+    max_connections: 25
+    max_idle_connections: 5
+    connection_max_lifetime: 5m
+
+# Caching Configuration
+cache:
+  enabled: true
+  type: "memory" # memory, redis, memcached
+  ttl: 15m
+  max_size: 1000
+  cleanup_interval: 5m
+  
+  redis:
+    host: "${REDIS_HOST:localhost}"
+    port: ${REDIS_PORT:6379}
+    password: "${REDIS_PASSWORD}"
+    db: 0
+    pool_size: 10
+    min_idle_connections: 5
+    dial_timeout: 5s
+    read_timeout: 3s
+    write_timeout: 3s
+  
+  memcached:
+    servers:
+      - "${MEMCACHED_HOST:localhost}:${MEMCACHED_PORT:11211}"
+    timeout: 3s
+    max_idle_connections: 2
+
+# Performance Configuration
+performance:
+  worker_pool_size: 0 # 0 = CPU cores * 2
+  batch_size: 10
+  batch_delay: 100ms
+  max_concurrent_requests: 100
+  request_timeout: 5m
+  
+  # Token optimization
+  ultra_compressed_ratio: 0.6
+  thinking_tokens:
+    standard: 8000
+    deep: 16000
+    ultra: 32000
+  
+  # Resource limits
+  max_memory_mb: 512
+  max_goroutines: 1000
+
+# Rate Limiting
+rate_limiting:
+  enabled: true
+  global:
+    requests_per_minute: 100
+    burst: 20
+  per_session:
+    requests_per_minute: 30
+    burst: 10
+  per_ip:
+    requests_per_minute: 60
+    burst: 15
+
+# Security Configuration
+security:
+  api_key_encryption: true
+  session_encryption: true
+  cors:
+    enabled: true
+    allowed_origins: ["http://localhost:3000", "https://yourdomain.com"]
+    allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    allowed_headers: ["Authorization", "Content-Type", "X-Session-ID"]
+    expose_headers: ["X-Request-ID"]
+    allow_credentials: true
+    max_age: 300
+  
+  auth:
+    session_timeout: 24h
+    jwt_secret: "${JWT_SECRET}"
+    jwt_expiry: 1h
+    refresh_token_expiry: 7d
+  
+  tls:
+    min_version: "1.2"
+    cipher_suites:
+      - "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
+      - "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305"
+      - "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"
+
+# Logging Configuration
+logging:
+  level: "info" # debug, info, warn, error
+  format: "json" # json, text
+  output: "stdout" # stdout, stderr, file
+  file:
+    path: "~/.superclaude/logs/superclaude.log"
+    max_size: 100MB
+    max_backups: 5
+    max_age: 30d
+    compress: true
+  
+  structured_fields:
+    service: "superclaude"
+    version: "${VERSION}"
+    environment: "${ENVIRONMENT:development}"
+  
+  # Component-specific logging
+  components:
+    superclaude: "info"
+    opencode: "warn"
+    database: "error"
+    cache: "warn"
+    mcp: "info"
+
+# Monitoring Configuration
+monitoring:
+  enabled: true
+  metrics:
+    enabled: true
+    path: "/metrics"
+    port: 9091
+    namespace: "superclaude"
+  
+  tracing:
+    enabled: false
+    provider: "jaeger" # jaeger, zipkin, otlp
+    endpoint: "${JAEGER_ENDPOINT:http://localhost:14268/api/traces}"
+    service_name: "superclaude"
+    sample_rate: 0.1
+  
+  health_check:
+    enabled: true
+    path: "/health"
+    interval: 30s
+    timeout: 5s
+  
+  profiling:
+    enabled: false # Enable in development only
+    path: "/debug/pprof"
+
+# SuperClaude Specific Configuration
+superclaude:
+  commands:
+    enabled: true
+    default_persona: "architect"
+    auto_persona_selection: true
+    command_history_size: 1000
+    
+    # Command-specific settings
+    analyze:
+      max_file_size: 10MB
+      supported_extensions: [".go", ".js", ".ts", ".py", ".java", ".c", ".cpp", ".rs"]
+    
+    build:
+      timeout: 10m
+      parallel_builds: true
+    
+    test:
+      timeout: 5m
+      coverage_threshold: 80
+    
+    improve:
+      max_suggestions: 10
+      include_examples: true
+  
+  personas:
+    enabled: true
+    allow_custom: false
+    collaboration_mode: true
+  
+  flags:
+    ultra_compressed_default: false
+    thinking_mode_default: "standard"
+    evidence_mode_default: false
+
+# IDE Integration Configuration
+ide:
+  enabled: true
+  vscode:
+    extension_id: "superclaude.vscode-superclaude"
+    auto_complete: true
+    code_actions: true
+    status_bar: true
+  
+  cursor:
+    enabled: true
+    keybindings: true
+    context_menu: true
+  
+  vim:
+    plugin_name: "vim-superclaude"
+    leader_key: "\\sc"
+  
+  emacs:
+    package_name: "superclaude"
+    prefix_key: "C-c s"
+
+# Feature Flags
+features:
+  mcp_server: true
+  cache_optimization: true
+  batch_processing: true
+  parallel_execution: true
+  command_completion: true
+  session_persistence: true
+  metrics_collection: true
+  auto_updates: false
+
+# Development Configuration
+development:
+  debug: false
+  hot_reload: false
+  mock_providers: false
+  test_mode: false
+  profiling: false
+  
+  fixtures:
+    load_test_data: false
+    test_data_path: "./testdata"
+
+# Deployment Configuration  
+deployment:
+  environment: "${ENVIRONMENT:development}" # development, staging, production
+  version: "${VERSION:dev}"
+  build_time: "${BUILD_TIME}"
+  git_commit: "${GIT_COMMIT}"
+  
+  # Environment-specific overrides
+  production:
+    logging:
+      level: "warn"
+    security:
+      cors:
+        allowed_origins: ["https://yourdomain.com"]
+    cache:
+      type: "redis"
+    database:
+      type: "postgres"
+  
+  staging:
+    logging:
+      level: "info"
+    monitoring:
+      tracing:
+        enabled: true
+        sample_rate: 0.5

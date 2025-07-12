@@ -1,0 +1,106 @@
+# Development Environment Configuration
+# Overrides for local development
+
+# Server - Development specific
+server:
+  host: "localhost"
+  port: 3000
+  timeout: 60s
+
+# MCP Server - Dev settings
+mcp:
+  port: 3001
+  websocket:
+    check_origin: false # Allow all origins in dev
+  cors:
+    allowed_origins: ["*"]
+
+# Providers - Dev models
+providers:
+  default: "ollama" # Use local models in dev
+  
+  ollama:
+    base_url: "http://localhost:11434"
+    default_model: "deepseek-coder:6.7b"
+    timeout: 180s # Longer timeout for local models
+
+# Database - Local SQLite
+database:
+  type: "sqlite"
+  sqlite:
+    path: "./dev-superclaude.db"
+    journal_mode: "DELETE" # Simpler for dev
+
+# Cache - Memory only
+cache:
+  type: "memory"
+  ttl: 5m # Shorter TTL for faster testing
+  max_size: 100
+
+# Performance - Lower limits
+performance:
+  worker_pool_size: 2
+  batch_size: 3
+  max_concurrent_requests: 10
+  max_memory_mb: 256
+
+# Rate Limiting - More permissive
+rate_limiting:
+  enabled: false # Disable in dev
+
+# Security - Relaxed
+security:
+  api_key_encryption: false
+  session_encryption: false
+  cors:
+    allowed_origins: ["*"]
+    allow_credentials: false
+
+# Logging - Verbose
+logging:
+  level: "debug"
+  format: "text" # Easier to read in terminal
+  output: "stdout"
+  
+  components:
+    superclaude: "debug"
+    opencode: "debug"
+    database: "debug"
+    cache: "debug"
+    mcp: "debug"
+
+# Monitoring - Full debugging
+monitoring:
+  enabled: true
+  profiling:
+    enabled: true # Enable pprof in dev
+
+# SuperClaude - Development features
+superclaude:
+  commands:
+    command_history_size: 100
+  personas:
+    allow_custom: true # Allow custom personas in dev
+
+# Development specific
+development:
+  debug: true
+  hot_reload: true
+  mock_providers: false
+  test_mode: false
+  profiling: true
+  
+  fixtures:
+    load_test_data: true
+    test_data_path: "./testdata"
+
+# Features - All enabled for testing
+features:
+  mcp_server: true
+  cache_optimization: true
+  batch_processing: true
+  parallel_execution: true
+  command_completion: true
+  session_persistence: true
+  metrics_collection: true
+  auto_updates: false

@@ -1,0 +1,258 @@
+# Production Environment Configuration
+# Secure, performant settings for production
+
+# Server - Production hardened
+server:
+  host: "0.0.0.0"
+  port: 8080
+  timeout: 30s
+  max_connections: 5000
+  tls:
+    enabled: true
+    cert_file: "/etc/ssl/certs/superclaude.crt"
+    key_file: "/etc/ssl/private/superclaude.key"
+
+# MCP Server - Secure WebSocket
+mcp:
+  enabled: true
+  host: "0.0.0.0"
+  port: 9090
+  websocket:
+    read_buffer_size: 4096
+    write_buffer_size: 4096
+    check_origin: true # Strict origin checking
+  cors:
+    allowed_origins: 
+      - "https://yourdomain.com"
+      - "https://app.yourdomain.com"
+    allowed_methods: ["GET", "POST"]
+    allowed_headers: ["Authorization", "Content-Type"]
+
+# Providers - Production models
+providers:
+  default: "openrouter"
+  
+  openrouter:
+    api_key: "${OPENROUTER_API_KEY}"
+    default_model: "openai/gpt-4-turbo-preview"
+    timeout: 30s
+    retry_count: 5
+    retry_delay: 2s
+
+# Database - PostgreSQL cluster
+database:
+  type: "postgres"
+  postgres:
+    host: "${DB_HOST}"
+    port: ${DB_PORT:5432}
+    database: "${DB_NAME}"
+    username: "${DB_USER}"
+    password: "${DB_PASSWORD}"
+    ssl_mode: "require"
+    max_connections: 100
+    max_idle_connections: 25
+    connection_max_lifetime: 1h
+
+# Cache - Redis cluster
+cache:
+  enabled: true
+  type: "redis"
+  ttl: 30m
+  max_size: 10000
+  cleanup_interval: 10m
+  
+  redis:
+    host: "${REDIS_HOST}"
+    port: ${REDIS_PORT:6379}
+    password: "${REDIS_PASSWORD}"
+    db: 0
+    pool_size: 50
+    min_idle_connections: 10
+    dial_timeout: 5s
+    read_timeout: 3s
+    write_timeout: 3s
+
+# Performance - Production optimized
+performance:
+  worker_pool_size: 0 # Auto-scale based on CPU
+  batch_size: 20
+  batch_delay: 50ms
+  max_concurrent_requests: 1000
+  request_timeout: 2m
+  
+  max_memory_mb: 2048
+  max_goroutines: 5000
+
+# Rate Limiting - Strict limits
+rate_limiting:
+  enabled: true
+  global:
+    requests_per_minute: 1000
+    burst: 100
+  per_session:
+    requests_per_minute: 60
+    burst: 20
+  per_ip:
+    requests_per_minute: 200
+    burst: 50
+
+# Security - Maximum protection
+security:
+  api_key_encryption: true
+  session_encryption: true
+  cors:
+    enabled: true
+    allowed_origins: 
+      - "https://yourdomain.com"
+      - "https://app.yourdomain.com"
+    allowed_methods: ["GET", "POST", "PUT", "DELETE"]
+    allowed_headers: ["Authorization", "Content-Type", "X-Session-ID"]
+    expose_headers: ["X-Request-ID", "X-Rate-Limit-Remaining"]
+    allow_credentials: true
+    max_age: 86400
+  
+  auth:
+    session_timeout: 8h
+    jwt_secret: "${JWT_SECRET}"
+    jwt_expiry: 15m
+    refresh_token_expiry: 7d
+  
+  tls:
+    min_version: "1.3"
+    cipher_suites:
+      - "TLS_AES_256_GCM_SHA384"
+      - "TLS_CHACHA20_POLY1305_SHA256"
+      - "TLS_AES_128_GCM_SHA256"
+
+# Logging - Structured production logs
+logging:
+  level: "warn"
+  format: "json"
+  output: "file"
+  file:
+    path: "/var/log/superclaude/superclaude.log"
+    max_size: 500MB
+    max_backups: 10
+    max_age: 90d
+    compress: true
+  
+  structured_fields:
+    service: "superclaude"
+    version: "${VERSION}"
+    environment: "production"
+    datacenter: "${DATACENTER}"
+    pod_name: "${POD_NAME}"
+  
+  components:
+    superclaude: "warn"
+    opencode: "error"
+    database: "error"
+    cache: "error"
+    mcp: "warn"
+
+# Monitoring - Full observability
+monitoring:
+  enabled: true
+  metrics:
+    enabled: true
+    path: "/metrics"
+    port: 9091
+    namespace: "superclaude"
+  
+  tracing:
+    enabled: true
+    provider: "jaeger"
+    endpoint: "${JAEGER_ENDPOINT}"
+    service_name: "superclaude"
+    sample_rate: 0.01 # 1% sampling in production
+  
+  health_check:
+    enabled: true
+    path: "/health"
+    interval: 15s
+    timeout: 3s
+  
+  profiling:
+    enabled: false # Disabled in production
+
+# SuperClaude - Production settings
+superclaude:
+  commands:
+    enabled: true
+    default_persona: "architect"
+    auto_persona_selection: true
+    command_history_size: 5000
+    
+    analyze:
+      max_file_size: 50MB
+    
+    build:
+      timeout: 15m
+      parallel_builds: true
+    
+    test:
+      timeout: 10m
+      coverage_threshold: 85
+  
+  personas:
+    enabled: true
+    allow_custom: false # No custom personas in prod
+    collaboration_mode: true
+
+# IDE Integration - Production ready
+ide:
+  enabled: true
+  vscode:
+    auto_complete: true
+    code_actions: true
+    status_bar: true
+  cursor:
+    enabled: true
+    keybindings: true
+    context_menu: true
+
+# Features - Stable features only
+features:
+  mcp_server: true
+  cache_optimization: true
+  batch_processing: true
+  parallel_execution: true
+  command_completion: true
+  session_persistence: true
+  metrics_collection: true
+  auto_updates: false # Manual updates in prod
+
+# Development - All disabled
+development:
+  debug: false
+  hot_reload: false
+  mock_providers: false
+  test_mode: false
+  profiling: false
+  
+  fixtures:
+    load_test_data: false
+
+# Backup and Recovery
+backup:
+  enabled: true
+  database:
+    interval: "0 2 * * *" # Daily at 2 AM
+    retention: 30d
+    encryption: true
+    storage: "s3://${BACKUP_BUCKET}/database/"
+  
+  sessions:
+    interval: "0 */6 * * *" # Every 6 hours
+    retention: 7d
+    storage: "s3://${BACKUP_BUCKET}/sessions/"
+
+# Auto-scaling (for Kubernetes)
+autoscaling:
+  enabled: true
+  min_replicas: 3
+  max_replicas: 50
+  target_cpu_utilization: 70
+  target_memory_utilization: 80
+  scale_up_stabilization: 60s
+  scale_down_stabilization: 300s
